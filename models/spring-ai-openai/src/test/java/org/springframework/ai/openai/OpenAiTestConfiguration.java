@@ -15,11 +15,11 @@
  */
 package org.springframework.ai.openai;
 
-import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.ai.openai.api.OpenAiAudioApi;
 import org.springframework.ai.openai.api.OpenAiImageApi;
 import org.springframework.ai.openai.api.OpenAiApi.ChatModel;
+import org.springframework.ai.openai.api.OpenAiModerationApi;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.util.StringUtils;
@@ -40,6 +40,11 @@ public class OpenAiTestConfiguration {
 	@Bean
 	public OpenAiAudioApi openAiAudioApi() {
 		return new OpenAiAudioApi(getApiKey());
+	}
+
+	@Bean
+	public OpenAiModerationApi openAiModerationApi() {
+		return new OpenAiModerationApi(getApiKey());
 	}
 
 	private String getApiKey() {
@@ -78,8 +83,14 @@ public class OpenAiTestConfiguration {
 	}
 
 	@Bean
-	public EmbeddingModel openAiEmbeddingModel(OpenAiApi api) {
+	public OpenAiEmbeddingModel openAiEmbeddingModel(OpenAiApi api) {
 		return new OpenAiEmbeddingModel(api);
+	}
+
+	@Bean
+	public OpenAiModerationModel openAiModerationClient(OpenAiModerationApi openAiModerationApi) {
+		OpenAiModerationModel openAiModerationModel = new OpenAiModerationModel(openAiModerationApi);
+		return openAiModerationModel;
 	}
 
 }

@@ -15,41 +15,40 @@
  */
 package org.springframework.ai.ollama;
 
-import java.io.IOException;
-import java.util.List;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.springframework.ai.ollama.api.OllamaModel;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.ollama.OllamaContainer;
-
+import org.junit.jupiter.api.condition.DisabledIf;
+import org.springframework.ai.embedding.EmbeddingRequest;
 import org.springframework.ai.embedding.EmbeddingResponse;
 import org.springframework.ai.ollama.api.OllamaApi;
 import org.springframework.ai.ollama.api.OllamaApiIT;
+import org.springframework.ai.ollama.api.OllamaModel;
 import org.springframework.ai.ollama.api.OllamaOptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
+import org.testcontainers.junit.jupiter.Testcontainers;
+
+import java.io.IOException;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-@Disabled("For manual smoke testing only.")
+@DisabledIf("isDisabled")
 @Testcontainers
-class OllamaEmbeddingModelIT {
+class OllamaEmbeddingModelIT extends BaseOllamaIT {
 
 	private static final String MODEL = OllamaModel.MISTRAL.getName();
 
 	private static final Log logger = LogFactory.getLog(OllamaApiIT.class);
 
-	@Container
-	static OllamaContainer ollamaContainer = new OllamaContainer(OllamaImage.DEFAULT_IMAGE);
+	// @Container
+	// static OllamaContainer ollamaContainer = new
+	// OllamaContainer(OllamaImage.DEFAULT_IMAGE);
 
 	static String baseUrl = "http://localhost:11434";
 
@@ -66,11 +65,17 @@ class OllamaEmbeddingModelIT {
 	private OllamaEmbeddingModel embeddingModel;
 
 	@Test
-	void singleEmbedding() {
+	void embeddings() {
 		assertThat(embeddingModel).isNotNull();
-		EmbeddingResponse embeddingResponse = embeddingModel.embedForResponse(List.of("Hello World"));
-		assertThat(embeddingResponse.getResults()).hasSize(1);
+		EmbeddingResponse embeddingResponse = embeddingModel.call(new EmbeddingRequest(
+				List.of("Hello World", "Something else"), OllamaOptions.builder().withTruncate(false).build()));
+		assertThat(embeddingResponse.getResults()).hasSize(2);
+		assertThat(embeddingResponse.getResults().get(0).getIndex()).isEqualTo(0);
 		assertThat(embeddingResponse.getResults().get(0).getOutput()).isNotEmpty();
+		assertThat(embeddingResponse.getResults().get(1).getIndex()).isEqualTo(1);
+		assertThat(embeddingResponse.getResults().get(1).getOutput()).isNotEmpty();
+		assertThat(embeddingResponse.getMetadata().getModel()).isEqualTo(MODEL);
+
 		assertThat(embeddingModel.dimensions()).isEqualTo(4096);
 	}
 

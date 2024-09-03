@@ -15,46 +15,42 @@
  */
 package org.springframework.ai.ollama.api;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.springframework.ai.ollama.OllamaImage;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.ollama.OllamaContainer;
-import reactor.core.publisher.Flux;
-
+import org.junit.jupiter.api.condition.DisabledIf;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.ai.ollama.BaseOllamaIT;
 import org.springframework.ai.ollama.api.OllamaApi.ChatRequest;
 import org.springframework.ai.ollama.api.OllamaApi.ChatResponse;
-import org.springframework.ai.ollama.api.OllamaApi.EmbeddingRequest;
-import org.springframework.ai.ollama.api.OllamaApi.EmbeddingResponse;
+import org.springframework.ai.ollama.api.OllamaApi.EmbeddingsRequest;
+import org.springframework.ai.ollama.api.OllamaApi.EmbeddingsResponse;
 import org.springframework.ai.ollama.api.OllamaApi.GenerateRequest;
 import org.springframework.ai.ollama.api.OllamaApi.GenerateResponse;
 import org.springframework.ai.ollama.api.OllamaApi.Message;
 import org.springframework.ai.ollama.api.OllamaApi.Message.Role;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import reactor.core.publisher.Flux;
 
-import static org.assertj.core.api.Assertions.assertThat;;
+import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+;
 
 /**
  * @author Christian Tzolov
  * @author Thomas Vitale
  */
-@Disabled("For manual smoke testing only.")
 @Testcontainers
-public class OllamaApiIT {
+@DisabledIf("isDisabled")
+public class OllamaApiIT extends BaseOllamaIT {
 
 	private static final String MODEL = OllamaModel.ORCA_MINI.getName();
 
-	private static final Log logger = LogFactory.getLog(OllamaApiIT.class);
-
-	@Container
-	static OllamaContainer ollamaContainer = new OllamaContainer(OllamaImage.DEFAULT_IMAGE);
+	private static final Logger logger = LoggerFactory.getLogger(OllamaApiIT.class);
 
 	static OllamaApi ollamaApi;
 
@@ -145,12 +141,13 @@ public class OllamaApiIT {
 	@Test
 	public void embedText() {
 
-		EmbeddingRequest request = new EmbeddingRequest(MODEL, "I like to eat apples");
+		EmbeddingsRequest request = new EmbeddingsRequest(MODEL, "I like to eat apples");
 
-		EmbeddingResponse response = ollamaApi.embeddings(request);
+		EmbeddingsResponse response = ollamaApi.embed(request);
 
 		assertThat(response).isNotNull();
-		assertThat(response.embedding()).hasSize(3200);
+		assertThat(response.embeddings()).hasSize(1);
+		assertThat(response.embeddings().get(0)).hasSize(3200);
 	}
 
 }
